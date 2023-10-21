@@ -286,3 +286,20 @@ pub fn decode_header(token: &str) -> Result<Header> {
     let (_, header) = expect_two!(message.rsplitn(2, '.'));
     Header::from_encoded(header)
 }
+
+/// Decode a JWT without any signature verification/validations and return its claims.
+///
+/// If the token has an invalid format (ie 3 parts separated by a `.`), it will return an error.
+///
+/// ```rust
+/// use jsonwebtoken::decode_header;
+///
+/// let token = "a.jwt.token".to_string();
+/// let claims = decode_claims(&token);
+/// ```
+pub fn decode_claims<T: DeserializeOwned>(token: &str) -> Result<T> {
+    let (_, message) = expect_two!(token.rsplitn(2, '.'));
+    let (payload, _) = expect_two!(message.rsplitn(2, '.'));
+    let decoded = b64_decode(payload)?;
+    Ok(serde_json::from_slice(&decoded)?)
+}
